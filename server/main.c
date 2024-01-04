@@ -10,11 +10,12 @@
 
 #include "common/constants.h"
 #include "common/io.h"
+#include "common/util.h"
 #include "operations.h"
 #include "queue.h"
 
 int main(int argc, char* argv[]) {
-  
+
   if (argc < 2 || argc > 3) {
     fprintf(stderr, "Usage: %s\n <pipe_path> [delay]\n", argv[0]);
     return 1;
@@ -69,7 +70,7 @@ int main(int argc, char* argv[]) {
 
   pthread_t *threads = malloc((unsigned long)MAX_SESSION_COUNT * sizeof(pthread_t));
   for(int i = 0; i<MAX_SESSION_COUNT; i++) {
-    pthread_create(threads[i], NULL, run_thread, queue);
+    //pthread_create(threads[i], NULL, run_thread, queue);
   }
 
   while (1) {
@@ -87,7 +88,7 @@ int main(int argc, char* argv[]) {
       get_msg(server_pipe,response_pipe_name, 40);
 
       //Create the new client Request and appends it to the Queue
-      struct Request* new_request = crete_request(request_pipe_name,response_pipe_name);
+      struct Request* new_request = create_request(request_pipe_name,response_pipe_name);
       append_request(queue,new_request);
     }
     //TODO: Write new client to the producer-consumer buffer
