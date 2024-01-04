@@ -13,6 +13,7 @@
 #include "common/util.h"
 #include "operations.h"
 #include "queue.h"
+#include "session.h"
 
 int main(int argc, char* argv[]) {
 
@@ -69,8 +70,15 @@ int main(int argc, char* argv[]) {
   }
 
   pthread_t *threads = malloc((unsigned long)MAX_SESSION_COUNT * sizeof(pthread_t));
+  struct Arguments* arguments_list = (struct Arguments*)malloc(MAX_SESSION_COUNT * sizeof(struct Arguments));
+
+  pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+
   for(int i = 0; i<MAX_SESSION_COUNT; i++) {
-    //pthread_create(threads[i], NULL, run_thread, queue);
+    arguments_list[i].queue = queue;
+    arguments_list[i].cond = &cond;
+    arguments_list[i].session_id = i;
+    pthread_create(threads[i], NULL, run_thread, (void*)&arguments_list[i]);
   }
 
   while (1) {
@@ -90,6 +98,7 @@ int main(int argc, char* argv[]) {
       //Create the new client Request and appends it to the Queue
       struct Request* new_request = create_request(request_pipe_name,response_pipe_name);
       append_request(queue,new_request);
+      pthread_cond_signal(&cond);
     }
     //TODO: Write new client to the producer-consumer buffer
   }
