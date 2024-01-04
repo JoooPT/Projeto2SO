@@ -130,24 +130,26 @@ int ems_show(int out_fd, unsigned int event_id) {
   send_msg(request_pipe, &session_id, sizeof(int));
   send_msg(request_pipe, &event_id, sizeof(unsigned int));
   get_msg(response_pipe, &exit, sizeof(int));
-  size_t num_rows, num_cols;
-  get_msg(response_pipe, &num_rows, sizeof(size_t));
-  get_msg(response_pipe, &num_cols, sizeof(size_t));
-  unsigned int* seats = malloc(num_rows * num_cols * sizeof(unsigned int));
-  get_msg(response_pipe, seats, sizeof(unsigned int) * num_cols * num_rows);
-  //TODO: send show request to the server (through the request pipe) and wait for the response (through the response pipe)
-  //TODO: write output to file
-  int i = 0;
-  char newLine = '\n';
-  for (size_t col = 0; col < num_cols; col++) {
+  if (exit != 0) {
+    size_t num_rows, num_cols;
+    get_msg(response_pipe, &num_rows, sizeof(size_t));
+    get_msg(response_pipe, &num_cols, sizeof(size_t));
+    unsigned int* seats = malloc(num_rows * num_cols * sizeof(unsigned int));
+    get_msg(response_pipe, seats, sizeof(unsigned int) * num_cols * num_rows);
+    //TODO: send show request to the server (through the request pipe) and wait for the response (through the response pipe)
+    //TODO: write output to file
+    int i = 0;
+    char newLine = '\n';
     for (size_t row = 0; row < num_rows; row++) {
-      char seat[12];
-      snprintf(seat, sizeof(seat), "%u ", seats[i++]);
-      write(out_fd, seat, strlen(seat));
+      for (size_t col = 0; col < num_cols; col++) {
+        char seat[12];
+        snprintf(seat, sizeof(seat), "%u ", seats[i++]);
+        write(out_fd, seat, strlen(seat));
+      }
+      write(out_fd, &newLine, sizeof(char));
     }
-    write(out_fd, &newLine, sizeof(char));
+    free(seats);
   }
-  free(seats);
   return 1;
 }
 
@@ -157,16 +159,18 @@ int ems_list_events(int out_fd) {
   send_msg(request_pipe, &code, sizeof(char));
   send_msg(request_pipe, &session_id, sizeof(int));
   get_msg(response_pipe, &exit, sizeof(int));
-  size_t num_events;
-  get_msg(response_pipe, &num_events, sizeof(size_t));
-  unsigned int* ids = malloc(num_events * sizeof(unsigned int));
-  get_msg(response_pipe, ids, sizeof(unsigned int) * num_events);
-  for (size_t i = 0; i < num_events; i++) {
-    char event[19];
-    snprintf(event, sizeof(event), "Event: %u\n", ids[i]);
-    write(out_fd, event, strlen(event));
+  if (exit != 0) {
+    size_t num_events;
+    get_msg(response_pipe, &num_events, sizeof(size_t));
+    unsigned int* ids = malloc(num_events * sizeof(unsigned int));
+    get_msg(response_pipe, ids, sizeof(unsigned int) * num_events);
+    for (size_t i = 0; i < num_events; i++) {
+      char event[19];
+      snprintf(event, sizeof(event), "Event: %u\n", ids[i]);
+      write(out_fd, event, strlen(event));
+    }
+    free(ids);
   }
-  free(ids);
   //TODO: send list request to the server (through the request pipe) and wait for the response (through the response pipe)
   //TODO: write output to file
   return 1;

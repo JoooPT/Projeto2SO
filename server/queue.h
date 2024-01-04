@@ -7,6 +7,7 @@
 struct Request {
     char request_pipe_name[40];
     char response_pipe_name[40];
+    int session_id;
 };
 
 struct QueueNode{

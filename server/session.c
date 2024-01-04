@@ -1,5 +1,6 @@
 #include "common/util.h"
 #include "common/constants.h"
+#include "operations.h"
 #include "queue.h"
 #include <pthread.h>
 #include <sys/unistd.h>
@@ -36,6 +37,48 @@ int run_session(struct Request request) {
         
         switch(code) {
         case OP_QUIT:
-            return 
+            // Unlink response pipe
+            if (unlink(request.response_pipe_name) != 0 && errno != ENOENT) {
+                fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", request.response_pipe_name,
+                        strerror(errno));
+                return(1);
+            }
+            // Unlink request pipe
+            if (unlink(request.request_pipe_name) != 0 && errno != ENOENT) {
+                fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", request.request_pipe_name,
+                        strerror(errno));
+                return(1);
+            }
+            return 0;
+        
+        case OP_CREATE:
+            unsigned int event_id;
+            size_t num_rows, num_cols;
+            get_msg(req_pipe, &event_id, sizeof(unsigned int));
+            get_msg(req_pipe, &num_rows, sizeof(size_t));
+            get_msg(req_pipe, &num_cols, sizeof(size_t));
+            int ret = ems_create(event_id, num_rows, num_cols);
+            send_msg(resp_pipe, &ret, sizeof(int));
+            
+        case OP_RESERVE:
+            unsigned int event_id;
+            size_t num_seats;
+            size_t* xs = malloc(sizeof(size_t)*num_seats);
+            size_t* ys = malloc(sizeof(size_t)*num_seats);
+            get_msg(req_pipe, &event_id, sizeof(unsigned int));
+            get_msg(req_pipe, &num_seats, sizeof(size_t));
+            get_msg(req_pipe, xs, sizeof(size_t)*num_seats);
+            get_msg(req_pipe, ys, sizeof(size_t)*num_seats);
+            int ret = ems_reserve(event_id, num_seats, xs, ys);
+            send_msg(resp_pipe, &ret, sizeof(int));
+        
+        case OP_SHOW:
+            unsigned int event_id;
+            get_msg(req_pipe, &event_id, sizeof(unsigned int));
+            ems_show(resp_pipe, event_id);
+
+        case OP_LIST_EVENTS:
+            
         }
+
 }

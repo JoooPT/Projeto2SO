@@ -14,6 +14,7 @@
 #include "queue.h"
 
 int main(int argc, char* argv[]) {
+  
   if (argc < 2 || argc > 3) {
     fprintf(stderr, "Usage: %s\n <pipe_path> [delay]\n", argv[0]);
     return 1;
@@ -67,7 +68,7 @@ int main(int argc, char* argv[]) {
   }
 
   pthread_t *threads = malloc((unsigned long)MAX_SESSION_COUNT * sizeof(pthread_t));
-  for(int i = 0; i<MAX_SESSION_COUNT; i++){
+  for(int i = 0; i<MAX_SESSION_COUNT; i++) {
     pthread_create(threads[i], NULL, run_thread, queue);
   }
 
