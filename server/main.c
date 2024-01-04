@@ -11,6 +11,7 @@
 #include "common/constants.h"
 #include "common/io.h"
 #include "operations.h"
+#include "queue.h"
 
 int main(int argc, char* argv[]) {
   if (argc < 2 || argc > 3) {
@@ -60,9 +61,9 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
-
   pthread_t *threads = malloc((unsigned long)MAX_SESSION_COUNT * sizeof(pthread_t));
 
+  struct Queue* queue = create_queue();
 
   while (1) {
     //TODO: Read from pipe
