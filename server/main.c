@@ -95,5 +95,11 @@ int main(int argc, char* argv[]) {
 
   //TODO: Close Server
 
+  for(int i = 0; i<MAX_SESSION_COUNT; i++){
+    pthread_join(threads[i], NULL);
+  }
+
+  close(server_pipe);
+  free_queue(queue);
   ems_terminate();
 }
