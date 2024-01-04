@@ -24,6 +24,12 @@ struct Queue{
 /// @return Newly created Queue or NULL on failure
 struct Queue* create_queue();
 
+/// Creates a new Request
+/// @param request_pipe name to be added to the request
+/// @param response_pipe name to be added to the request
+/// @return Newly created Request or NULL on failure
+struct Request* create_request(char* request_pipe, char* response_pipe);
+
 /// Appends a request to the end of the Queue
 /// @param queue Queue to be modified
 /// @param request Request to be appended

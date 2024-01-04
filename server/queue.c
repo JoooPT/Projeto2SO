@@ -1,7 +1,7 @@
 #include "queue.h"
 
 #include <pthread.h>
-#include <stdlib.h>
+#include <string.h>
 
 struct Queue* create_queue(){
     struct Queue* queue = (struct Queue*)malloc(sizeof(struct Queue));
@@ -13,6 +13,14 @@ struct Queue* create_queue(){
     queue->head = NULL;
     queue->tail = NULL;
     return queue;
+}
+
+struct Request* create_request(char* request_pipe, char* response_pipe){
+    struct Request* new_request = (struct Request*)malloc(sizeof(struct Request));
+    strcpy(new_request->request_pipe_name,request_pipe);
+    strcpy(new_request->response_pipe_name, response_pipe);
+
+    return new_request;
 }
 
 int append_request(struct Queue* queue, struct Request* request){
@@ -36,13 +44,16 @@ int append_request(struct Queue* queue, struct Request* request){
 }
 
 struct Request* pop_request(struct Queue* queue){
-    if(!queue) return;
+    if(!queue) return NULL;
 
     struct QueueNode* temp = queue->head;
-    if(!temp) return 1;
+    if(!temp) return NULL;
     temp = temp->next;
 
-    struct Request* request 
+    struct Request* request = queue->head->request;
+    queue->head = temp;
+
+    return request;
 
 }
 
