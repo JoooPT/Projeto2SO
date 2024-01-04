@@ -135,8 +135,8 @@ int ems_show(int out_fd, unsigned int event_id) {
   //TODO: write output to file
   int i = 0;
   char newLine = '\n';
-  for (int col = 0; col < num_cols; col++) {
-    for (int row = 0; row < num_rows; row++) {
+  for (size_t col = 0; col < num_cols; col++) {
+    for (size_t row = 0; row < num_rows; row++) {
       char seat[11];
       snprintf(seat, sizeof(seat), "%u ", seats[i++]);
       write(out_fd, seat, strlen(seat));
@@ -156,6 +156,11 @@ int ems_list_events(int out_fd) {
   read(response_pipe, &num_events, sizeof(size_t));
   unsigned int* ids = malloc(num_events * sizeof(unsigned int));
   read(response_pipe, ids, sizeof(unsigned int) * num_events);
+  for (size_t i = 0; i < num_events; i++) {
+    char event[11];
+    snprintf(event, sizeof(event), "Event: %u\n", ids[i]);
+  }
+  free(ids);
   //TODO: send list request to the server (through the request pipe) and wait for the response (through the response pipe)
   //TODO: write output to file
   return 1;
