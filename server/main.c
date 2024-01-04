@@ -60,10 +60,16 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
     exit(EXIT_FAILURE);
   }
+  
+  struct Queue* queue = create_queue();
+  if(!queue){
+    fprintf(stderr, "[ERR]: queue initialize failed: %s\n", strerror(errno));
+  }
 
   pthread_t *threads = malloc((unsigned long)MAX_SESSION_COUNT * sizeof(pthread_t));
-
-  struct Queue* queue = create_queue();
+  for(int i = 0; i<MAX_SESSION_COUNT; i++){
+    pthread_create(threads[i], NULL, run_thread, queue);
+  }
 
   while (1) {
     //TODO: Read from pipe
@@ -73,7 +79,15 @@ int main(int argc, char* argv[]) {
       exit(EXIT_FAILURE);
     }
     if (code == OP_SETUP) {
-      //pthread_create(&threads[i], NULL, run_thread, (void *)&args_list[i]);
+      char request_pipe_name[40], response_pipe_name[40];
+
+      //Read both pipe names
+      get_msg(server_pipe,request_pipe_name,40);
+      get_msg(server_pipe,response_pipe_name, 40);
+
+      //Create the new client Request and appends it to the Queue
+      struct Request* new_request = crete_request(request_pipe_name,response_pipe_name);
+      append_request(queue,new_request);
     }
     //TODO: Write new client to the producer-consumer buffer
   }
