@@ -133,6 +133,16 @@ int ems_show(int out_fd, unsigned int event_id) {
   read(response_pipe, seats, sizeof(unsigned int) * num_cols * num_rows);
   //TODO: send show request to the server (through the request pipe) and wait for the response (through the response pipe)
   //TODO: write output to file
+  int i = 0;
+  char newLine = '\n';
+  for (int col = 0; col < num_cols; col++) {
+    for (int row = 0; row < num_rows; row++) {
+      char seat[11];
+      snprintf(seat, sizeof(seat), "%u ", seats[i++]);
+      write(out_fd, seat, strlen(seat));
+    }
+    write(out_fd, &newLine, sizeof(char));
+  }
   free(seats);
   return 1;
 }
