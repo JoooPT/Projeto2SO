@@ -4,18 +4,18 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <unistd.h>
 
-void send_msg(int tx, char const *str) {
-    size_t len = strlen(str);
-    size_t written = 0;
+void send_msg(int pipe, void* src, size_t bytes) {
+    if (write(pipe, src, bytes) < 0) {
+        fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+}
 
-    while (written < len) {
-        ssize_t ret = write(tx, str + written, len - written);
-        if (ret < 0) {
-            fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-
-        written += ret;
+void get_msg(int pipe, void* dest, size_t bytes) {
+    if (read(pipe, dest, bytes) < 0) {
+        fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
     }
 }

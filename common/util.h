@@ -1,10 +1,16 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-// Helper function to send messages
-// Retries to send whatever was not sent in the beginning  
-/// @param fd 
-/// @param buff 
-void send_msg(int fd, Buffer buff)
+/// Send message to a pipe 
+/// @param pipe 
+/// @param src 
+/// @param bytes 
+void send_msg(int pipe, void* src, size_t bytes);
+
+/// Send read message from a pipe 
+/// @param pipe 
+/// @param dest
+/// @param bytes 
+void get_msg(int pipe, void* dest, size_t bytes);
 
 #endif // UTIL_H
