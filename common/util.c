@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <fnctl>
 
 void send_msg(int pipe, void* src, size_t bytes) {
     if (write(pipe, src, bytes) < 0) {
