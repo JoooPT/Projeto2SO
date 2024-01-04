@@ -1,7 +1,3 @@
-#include "common/util.h"
-#include "common/constants.h"
-#include "operations.h"
-#include "queue.h"
 #include <pthread.h>
 #include <sys/unistd.h>
 #include <stddef.h>
@@ -10,11 +6,51 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-int run_session(struct Request request) {
+#include "common/util.h"
+#include "common/constants.h"
+#include "operations.h"
+#include "queue.h"
+#include "session.h"
+
+void *run_thread(void *args){
+    struct Arguments* arguments = (struct Arguments*)args;
+
+    while(1){
+        //Locks the queue to retrieve a request
+        if(pthread_mutex_lock(&arguments->queue->mutex) != 0){
+            fprintf(stderr, "[ERR]: failed locking a muted: %s\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+
+        //If the queue is empty waits for a signal that a request was made
+        while(arguments->queue->head == NULL){
+            pthread_cond_wait(&arguments->cond, &arguments->queue->mutex);
+        }
+
+        //Fetchs a Request from the Queue
+        struct Request* new_request = pop_request(arguments->queue);
+
+        //Unlocks the Queue 
+        if(pthread_mutex_unlock(&arguments->queue->mutex)!= 0){
+            fprintf(stderr, "[ERR]: failed unlocking a muted: %s\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+
+        // Starts the Session with the new client
+        if(new_request != NULL){
+            if(run_session(new_request) == END_THREAD){
+                break;
+            }
+        }
+    }
+}
+
+
+int run_session(struct Request* request) {
 
     // Open request pipe for writing
     // This waits for someone to open it for reading
-    int req_pipe = open(request.request_pipe_name, O_RDONLY);
+    int req_pipe = open(request->request_pipe_name, O_RDONLY);
     if (req_pipe == -1) {
         fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
@@ -22,7 +58,7 @@ int run_session(struct Request request) {
 
     // Open response pipe for reading
     // This waits for someone to open it for writing
-    int resp_pipe = open(request.response_pipe_name, O_WRONLY);
+    int resp_pipe = open(request->response_pipe_name, O_WRONLY);
     if (resp_pipe == -1) {
         fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
@@ -38,14 +74,14 @@ int run_session(struct Request request) {
         switch(code) {
         case OP_QUIT:
             // Unlink response pipe
-            if (unlink(request.response_pipe_name) != 0 && errno != ENOENT) {
-                fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", request.response_pipe_name,
+            if (unlink(request->response_pipe_name) != 0 && errno != ENOENT) {
+                fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", request->response_pipe_name,
                         strerror(errno));
                 return(1);
             }
             // Unlink request pipe
-            if (unlink(request.request_pipe_name) != 0 && errno != ENOENT) {
-                fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", request.request_pipe_name,
+            if (unlink(request->request_pipe_name) != 0 && errno != ENOENT) {
+                fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", request->request_pipe_name,
                         strerror(errno));
                 return(1);
             }

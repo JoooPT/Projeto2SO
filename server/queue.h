@@ -47,4 +47,4 @@ struct Request* pop_request(struct Queue* queue);
 /// @param queue Queue to be modified
 void free_queue(struct Queue* queue);
 
-#endif SERVER_QUEUE_H
+#endif
