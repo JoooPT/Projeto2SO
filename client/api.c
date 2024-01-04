@@ -1,12 +1,12 @@
 #include "api.h"
-#include "util.h"  
-#include "constants.h"
+#include "common/constants.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 int request_pipe;
 int response_pipe;
@@ -96,18 +96,20 @@ int ems_quit(void) {
 }
 
 int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
+  int exit;
   char code = OP_CREATE;
   write(request_pipe, &code, sizeof(char));
   write(request_pipe, &session_id, sizeof(int));
   write(request_pipe, &event_id, sizeof(unsigned int));
   write(request_pipe, &num_rows, sizeof(size_t));
   write(request_pipe, &num_cols, sizeof(size_t));
-  read(response_pipe, NULL, sizeof(int));
+  read(response_pipe, &exit, sizeof(int));
   //TODO: send create request to the server (through the request pipe) and wait for the response (through the response pipe)
   return 1;
 }
 
 int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys) {
+  int exit;
   char code = OP_RESERVE;
   write(request_pipe, &code, sizeof(char));
   write(request_pipe, &session_id, sizeof(int));
@@ -115,17 +117,18 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
   write(request_pipe, &num_seats, sizeof(size_t));
   write(request_pipe, xs, sizeof(size_t)*num_seats);
   write(request_pipe, ys, sizeof(size_t)*num_seats);
-  read(response_pipe, NULL, sizeof(int));
+  read(response_pipe, &exit, sizeof(int));
   //TODO: send reserve request to the server (through the request pipe) and wait for the response (through the response pipe)
   return 1;
 }
 
 int ems_show(int out_fd, unsigned int event_id) {
+  int exit;
   char code = OP_SHOW;
   write(request_pipe, &code, sizeof(char));
   write(request_pipe, &session_id, sizeof(int));
   write(request_pipe, &event_id, sizeof(unsigned int));
-  read(response_pipe, NULL, sizeof(int));
+  read(response_pipe, &exit, sizeof(int));
   size_t num_rows, num_cols;
   read(response_pipe, &num_rows, sizeof(size_t));
   read(response_pipe, &num_cols, sizeof(size_t));
@@ -148,10 +151,11 @@ int ems_show(int out_fd, unsigned int event_id) {
 }
 
 int ems_list_events(int out_fd) {
+  int exit;
   char code = OP_LIST_EVENTS;
   write(request_pipe, &code, sizeof(char));
   write(request_pipe, &session_id, sizeof(int));
-  read(response_pipe, NULL, sizeof(int));
+  read(response_pipe, &exit, sizeof(int));
   size_t num_events;
   read(response_pipe, &num_events, sizeof(size_t));
   unsigned int* ids = malloc(num_events * sizeof(unsigned int));
