@@ -5,12 +5,15 @@
 #include <sys/unistd.h>
 #include <stddef.h>
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
 
 int run_session(struct Request request) {
 
 // Open request pipe for writing
   // This waits for someone to open it for reading
-  int req_pipe = open(request.request_pipe_name, O_WRONLY);
+  int req_pipe = open(request.request_pipe_name, O_RDONLY);
   if (req_pipe == -1) {
       fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);

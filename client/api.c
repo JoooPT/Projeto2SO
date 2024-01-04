@@ -76,7 +76,7 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
 
   // Open response pipe for reading
   // This waits for someone to open it for writing
-  response_pipe = open(resp_pipe_path, O_WRONLY);
+  response_pipe = open(resp_pipe_path, O_RDONLY);
   if (response_pipe == -1) {
       fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
