@@ -122,6 +122,7 @@ int main(int argc, char *argv[]) {
 
   while (1) {
     char code;
+    ssize_t ret = 0;
     if (sigusr1_flag > 0) {
       // list_event(); //TO DO create this function
       ems_show_events();
@@ -136,7 +137,9 @@ int main(int argc, char *argv[]) {
       free(arguments_list);
       return ems_terminate();
     }
-    ssize_t ret = read(server_pipe, &code, sizeof(char));
+    if(server_pipe != -1){
+      ret = read(server_pipe, &code, sizeof(char));
+    }
     if ( ret < 0) {
       fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
