@@ -129,8 +129,6 @@ void *run_thread(void *args) {
 
     // Starts the Session with the new client
     if (new_request != NULL) {
-      printf("Thread %u: running pipe: %s\n", arguments->session_id,
-             new_request->request_pipe_name);
       if (run_session(new_request, arguments->session_id)) {
         fprintf(stderr, "[ERR]: Session: %u ended unsucessfuly\n",
                 arguments->session_id);

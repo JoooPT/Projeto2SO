@@ -129,6 +129,7 @@ int main(int argc, char *argv[]) {
     }
     if (sigint_flag > 0) {
       // Close Server
+
       close(server_pipe);
       free_queue(queue);
       free(threads);
@@ -146,6 +147,9 @@ int main(int argc, char *argv[]) {
       close(server_pipe);
       server_pipe = open(fifo_pathname, O_RDONLY);
       if (server_pipe == -1) {
+        if(errno == EINTR){
+          continue;
+        }
         fprintf(stderr, "[ERR]:Server failed opening server_pipe: %s\n",
                 strerror(errno));
         exit(EXIT_FAILURE);
