@@ -43,6 +43,7 @@ int run_session(struct Request *request, int id) {
     unsigned int event_id;
     int ret;
 
+    //read operation code and session id
     get_msg(req_pipe, &code, sizeof(char));
     get_msg(req_pipe, &session_id, sizeof(int));
 

@@ -124,6 +124,7 @@ int main(int argc, char *argv[]) {
     char code;
     if (sigusr1_flag > 0) {
       // list_event(); //TO DO create this function
+      ems_show_events();
       sigusr1_flag--;
     }
     if (sigint_flag > 0) {

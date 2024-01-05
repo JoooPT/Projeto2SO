@@ -38,4 +38,8 @@ int ems_show(int out_fd, unsigned int event_id);
 /// @return 0 if the events were printed successfully, 1 otherwise.
 int ems_list_events(int out_fd);
 
+/// Prints all event ids and their seats with a similar format to ems_show
+/// @return 0 if the events were printed successfully, 1 otherwise.
+int ems_show_events();
+
 #endif // SERVER_OPERATIONS_H
