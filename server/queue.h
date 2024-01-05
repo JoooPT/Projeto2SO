@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <stddef.h>
 
-#include "constants.h"
+#include "common/constants.h"
 
 struct Request {
     char request_pipe_name[NAME_LEN];

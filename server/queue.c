@@ -45,17 +45,12 @@ int append_request(struct Queue* queue, struct Request* request){
 }
 
 struct Request* pop_request(struct Queue* queue){
-    if(!queue) return NULL;
-
-    struct QueueNode* temp = queue->head;
-    if(!temp) return NULL;
-    temp = temp->next;
+    if(!queue || !queue->head || !queue->head->request) return NULL;
 
     struct Request* request = queue->head->request;
-    queue->head = temp;
+    queue->head = queue->head->next;
 
     return request;
-
 }
 
 void free_queue(struct Queue* queue){

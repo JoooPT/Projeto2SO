@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
       //Create the new client Request and appends it to the Queue
       struct Request* new_request = create_request(request_pipe_name,response_pipe_name);
       append_request(queue,new_request);
-      pthread_cond_signal(&cond);
+      pthread_cond_broadcast(&cond);
     }
     //TODO: Write new client to the producer-consumer buffer
   }

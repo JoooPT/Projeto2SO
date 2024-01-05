@@ -13,10 +13,7 @@
 #include "queue.h"
 #include "session.h"
 
-int run_session(struct Request* request) {
-
-    printf("Request pipe: %s\n", request->request_pipe_name);
-    printf("Response pipe: %s\n", request->response_pipe_name);
+int run_session(struct Request* request, int id) {
 
     // Open request pipe for writing
     // This waits for someone to open it for reading
@@ -34,8 +31,11 @@ int run_session(struct Request* request) {
         return 1;
     } 
 
+    send_msg(resp_pipe, &id, sizeof(int));
+
     char code;
     int session_id;
+
 
     while (1){
         unsigned int event_id;
@@ -61,6 +61,7 @@ int run_session(struct Request* request) {
             return 0;
         
         case OP_CREATE:
+            printf("I am creating\n");
             size_t num_rows, num_cols;
             get_msg(req_pipe, &event_id, sizeof(unsigned int));
             get_msg(req_pipe, &num_rows, sizeof(size_t));
@@ -95,11 +96,12 @@ int run_session(struct Request* request) {
 
 void *run_thread(void *args){
     struct Arguments* arguments = (struct Arguments*)args;
+    struct Request* new_request = NULL;
 
     while(1){
         //Locks the queue to retrieve a request
         if(pthread_mutex_lock(&arguments->queue->mutex) != 0){
-            fprintf(stderr, "[ERR]: failed locking a muted: %s\n", strerror(errno));
+            fprintf(stderr, "[ERR]: failed locking a mutex: %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         }
 
@@ -109,20 +111,23 @@ void *run_thread(void *args){
         }
 
         //Fetchs a Request from the Queue
-        struct Request* new_request = pop_request(arguments->queue);
+        new_request = pop_request(arguments->queue);
+
 
         //Unlocks the Queue 
         if(pthread_mutex_unlock(&arguments->queue->mutex)!= 0){
-            fprintf(stderr, "[ERR]: failed unlocking a muted: %s\n", strerror(errno));
+            fprintf(stderr, "[ERR]: failed unlocking a mutex: %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         }
 
         // Starts the Session with the new client
         if(new_request != NULL){
-            if(run_session(new_request) == END_THREAD){
+            if(run_session(new_request,arguments->session_id) == END_THREAD){
                 break;
             }
         }
+
+        printf("Thread: %u terminated session\n", arguments->session_id);
     }
     
     pthread_exit(NULL);
