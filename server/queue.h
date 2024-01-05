@@ -4,9 +4,11 @@
 #include <pthread.h>
 #include <stddef.h>
 
+#include "constants.h"
+
 struct Request {
-    char request_pipe_name[40];
-    char response_pipe_name[40];
+    char request_pipe_name[NAME_LEN];
+    char response_pipe_name[NAME_LEN];
     int session_id;
 };
 

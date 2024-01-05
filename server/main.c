@@ -90,11 +90,11 @@ int main(int argc, char* argv[]) {
       exit(EXIT_FAILURE);
     }
     if (code == OP_SETUP) {
-      char request_pipe_name[40], response_pipe_name[40];
+      char request_pipe_name[NAME_LEN], response_pipe_name[NAME_LEN];
 
       //Read both pipe names
-      get_msg(server_pipe,request_pipe_name,40);
-      get_msg(server_pipe,response_pipe_name, 40);
+      get_msg(server_pipe,request_pipe_name,NAME_LEN);
+      get_msg(server_pipe,response_pipe_name, NAME_LEN);
 
       //Create the new client Request and appends it to the Queue
       struct Request* new_request = create_request(request_pipe_name,response_pipe_name);

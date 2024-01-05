@@ -55,10 +55,10 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
 
   // write to server pipe
   char req_pipe[NAME_LEN];
-  memset(req_pipe, 0, NAME_LEN);
+  memset(req_pipe, 0, NAME_LEN* sizeof(char));
   strcpy(req_pipe, req_pipe_path);
   char resp_pipe[NAME_LEN];
-  memset(req_pipe, 0, NAME_LEN);
+  memset(resp_pipe, 0, NAME_LEN* sizeof(char));
   strcpy(resp_pipe, resp_pipe_path);
   char code = OP_SETUP;
   send_msg(server_pipe, &code, sizeof(char));
