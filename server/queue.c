@@ -2,6 +2,7 @@
 
 #include <pthread.h>
 #include <string.h>
+#include <stdlib.h>
 
 struct Queue* create_queue(){
     struct Queue* queue = (struct Queue*)malloc(sizeof(struct Queue));

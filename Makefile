@@ -14,10 +14,10 @@ endif
 
 all: server/ems client/client
 
-server/ems: common/io.o common/constants.h server/main.c server/operations.o server/eventlist.o
+server/ems: common/io.o common/constants.h common/util.o server/main.c server/operations.o server/eventlist.o server/session.o server/queue.o
 	$(CC) $(CFLAGS) $(SLEEP) -o $@ $^
 
-client/client: common/io.o common/constants.h client/main.c client/api.o client/parser.o 
+client/client: common/io.o common/constants.h common/util.o client/main.c client/api.o client/parser.o 
 	$(CC) $(CFLAGS) -o $@ $^
 
 %.o: %.c %.h

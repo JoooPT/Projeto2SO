@@ -15,6 +15,7 @@
 #include "queue.h"
 #include "session.h"
 
+
 int main(int argc, char* argv[]) {
 
   if (argc < 2 || argc > 3) {
@@ -60,7 +61,7 @@ int main(int argc, char* argv[]) {
   // This waits for someone to open it for writing
   int server_pipe = open(fifo_pathname, O_RDONLY);
   if (server_pipe == -1) {
-    fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
+    fprintf(stderr, "[ERR]:Server failed opening server_pipe: %s\n", strerror(errno));
     exit(EXIT_FAILURE);
   }
   
@@ -78,7 +79,7 @@ int main(int argc, char* argv[]) {
     arguments_list[i].queue = queue;
     arguments_list[i].cond = &cond;
     arguments_list[i].session_id = i;
-    pthread_create(threads[i], NULL, run_thread, (void*)&arguments_list[i]);
+    pthread_create(&threads[i], NULL, run_thread, (void*)&arguments_list[i]);
   }
 
   while (1) {

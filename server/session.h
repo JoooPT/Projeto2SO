@@ -12,7 +12,7 @@ struct Arguments{
 };
 
 
-/// Each thread fetchs a request from the queue and creates a session with a client
+/// Each thread fetches a request from the queue and creates a session with a client
 /// @param args struct Arguments with a queue, condition variable and a session_id
 void *run_thread(void *args);
 

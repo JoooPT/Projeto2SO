@@ -1,6 +1,3 @@
-#include "api.h"
-#include "common/constants.h"
-#include "common/util.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -8,6 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+
+#include "api.h"
+#include "common/constants.h"
+#include "common/util.h"
 
 int request_pipe;
 int response_pipe;
