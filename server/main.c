@@ -16,15 +16,15 @@
 #include "queue.h"
 #include "session.h"
 
-int count = 0;
+int sigusr1_flag = 0;
 
 static void sig_handler(int sig){
   if(sig == SIGUSR1){
     if (signal(SIGUSR1, sig_handler) == SIG_ERR) {
       exit(EXIT_FAILURE);
     }
-    count++;
-    fprintf(stderr, "Caught SIGUSR1 (%d)\n", count);
+    sigusr1_flag++;
+    fprintf(stderr, "Caught SIGUSR1 (%d)\n", sigusr1_flag);
     return; // Resume execution at point of interruption
   }
 }
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
 
   // Open server pipe for reading
   // This waits for someone to open it for writing
-  int server_pipe = open(fifo_pathname, O_RDWR);
+  int server_pipe = open(fifo_pathname, O_RDONLY);
   if (server_pipe == -1) {
     fprintf(stderr, "[ERR]:Server failed opening server_pipe: %s\n", strerror(errno));
     exit(EXIT_FAILURE);
@@ -129,15 +129,24 @@ int main(int argc, char* argv[]) {
   while (1) {
     //TODO: Read from pipe
     char code;
-    if(count > 0){
+    if(sigusr1_flag > 0){
       //list_event(); //TO DO create this function
-      count--;
+      sigusr1_flag--;
     }
     if (read(server_pipe, &code, sizeof(char)) < 0) {
       fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
     }
-    if (code == OP_SETUP) {
+    //If there is no client to request a session close and open the server pipe to wait for other client
+    if(code == 0){
+      close(server_pipe);
+      server_pipe = open(fifo_pathname, O_RDONLY);
+      if (server_pipe == -1) {
+        fprintf(stderr, "[ERR]:Server failed opening server_pipe: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+      }
+    }
+    else if (code == OP_SETUP) {
       char request_pipe_name[NAME_LEN], response_pipe_name[NAME_LEN];
 
       //Locks the queue to create a request
