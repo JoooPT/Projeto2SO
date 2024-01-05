@@ -123,11 +123,13 @@ int main(int argc, char *argv[]) {
   while (1) {
     char code;
     ssize_t ret = 0;
+    //If sigusr1 was caught
     if (sigusr1_flag > 0) {
-      // list_event(); //TO DO create this function
+      // List all events and their sits 
       ems_show_events();
       sigusr1_flag--;
     }
+    //If sigint was caught
     if (sigint_flag > 0) {
       // Close Server
 
@@ -137,6 +139,7 @@ int main(int argc, char *argv[]) {
       free(arguments_list);
       return ems_terminate();
     }
+    //Read the code only if the pipe is not broken
     if(server_pipe != -1){
       ret = read(server_pipe, &code, sizeof(char));
     }
@@ -145,7 +148,7 @@ int main(int argc, char *argv[]) {
       exit(EXIT_FAILURE);
     }
     // If there is no client to request a session close and open the server pipe
-    // to wait for other client
+    // to wait for other client( and fixes the pipe after a interrupt)
     if (ret == 0) {
       close(server_pipe);
       server_pipe = open(fifo_pathname, O_RDONLY);
