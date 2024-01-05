@@ -86,6 +86,7 @@ int run_session(struct Request *request, int id) {
 
     case OP_LIST_EVENTS:
       ems_list_events(resp_pipe);
+      break;
     }
   }
 }
