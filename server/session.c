@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
+#include <signal.h>
 
 #include "common/util.h"
 #include "common/constants.h"
@@ -96,6 +97,16 @@ int run_session(struct Request* request, int id) {
 void *run_thread(void *args){
     struct Arguments* arguments = (struct Arguments*)args;
     struct Request* new_request = NULL;
+
+    //create the Set with the signal to be blocked
+    sigset_t mask;
+    sigemptyset (&mask);
+    sigaddset (&mask, SIGUSR1);
+    //Block the signal SIGUSR1
+    if(pthread_sigmask(SIG_BLOCK,&mask,NULL)!= 0){
+        fprintf(stderr, "[ERR]: failed masking SIG_BLOCK: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
 
     while(1){
         //Locks the queue to retrieve a request

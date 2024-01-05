@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <signal.h>
 
 #include "common/constants.h"
 #include "common/io.h"
@@ -15,8 +16,49 @@
 #include "queue.h"
 #include "session.h"
 
+int count = 0;
+
+static void sig_handler(int sig){
+  if(sig == SIGUSR1){
+    if (signal(SIGUSR1, sig_handler) == SIG_ERR) {
+      exit(EXIT_FAILURE);
+    }
+    count++;
+    fprintf(stderr, "Caught SIGUSR1 (%d)\n", count);
+    return; // Resume execution at point of interruption
+  }
+}
+
+// static void sig_handler(int sig, struct Queue* queue, int server_pipe){
+//   if (sig == SIGINT) {
+//     if (signal(SIGINT, sig_handler) == SIG_ERR) {
+//       exit(EXIT_FAILURE);
+//     }
+//     fprintf(stderr, "Caught SIGINT (Terminating Server)");
+//     //Terminate the server and exit
+//     close(server_pipe);
+//     free_queue(queue);
+//     ems_terminate();
+//     exit(EXIT_SUCCESS);
+
+//   }
+//   if (signal(SIGINT, sig_handler) == SIG_ERR) {
+//     exit(EXIT_FAILURE);
+//   }
+//   fprintf(stderr, "Caught SIGQUIT (Terminating Server)");
+//   //Terminate the server and exit
+//   close(server_pipe);
+//   free_queue(queue);
+//   ems_terminate();
+//   exit(EXIT_SUCCESS);
+// }
 
 int main(int argc, char* argv[]) {
+
+  //Define the routine for the signal SIGUSR1
+  if (signal(SIGUSR1, sig_handler) == SIG_ERR) {
+    exit(EXIT_FAILURE);
+  }
 
   if (argc < 2 || argc > 3) {
     fprintf(stderr, "Usage: %s\n <pipe_path> [delay]\n", argv[0]);
@@ -59,17 +101,19 @@ int main(int argc, char* argv[]) {
 
   // Open server pipe for reading
   // This waits for someone to open it for writing
-  int server_pipe = open(fifo_pathname, O_RDONLY);
+  int server_pipe = open(fifo_pathname, O_RDWR);
   if (server_pipe == -1) {
     fprintf(stderr, "[ERR]:Server failed opening server_pipe: %s\n", strerror(errno));
     exit(EXIT_FAILURE);
   }
   
+  //Starts the queue
   struct Queue* queue = create_queue();
   if(!queue){
     fprintf(stderr, "[ERR]: queue initialize failed: %s\n", strerror(errno));
   }
 
+  //
   pthread_t *threads = malloc((unsigned long)MAX_SESSION_COUNT * sizeof(pthread_t));
   struct Arguments* arguments_list = (struct Arguments*)malloc(MAX_SESSION_COUNT * sizeof(struct Arguments));
 
@@ -84,13 +128,23 @@ int main(int argc, char* argv[]) {
 
   while (1) {
     //TODO: Read from pipe
-    char code = 0;
+    char code;
+    if(count > 0){
+      //list_event(); //TO DO create this function
+      count--;
+    }
     if (read(server_pipe, &code, sizeof(char)) < 0) {
       fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
     }
     if (code == OP_SETUP) {
       char request_pipe_name[NAME_LEN], response_pipe_name[NAME_LEN];
+
+      //Locks the queue to create a request
+      if(pthread_mutex_lock(&queue->mutex) != 0){
+          fprintf(stderr, "[ERR]: failed locking a mutex: %s\n", strerror(errno));
+          exit(EXIT_FAILURE);
+      }
 
       //Read both pipe names
       get_msg(server_pipe,request_pipe_name,NAME_LEN);
@@ -99,6 +153,12 @@ int main(int argc, char* argv[]) {
       //Create the new client Request and appends it to the Queue
       struct Request* new_request = create_request(request_pipe_name,response_pipe_name);
       append_request(queue,new_request);
+      //Unlocks the Queue 
+      if(pthread_mutex_unlock(&queue->mutex)!= 0){
+          fprintf(stderr, "[ERR]: failed unlocking a mutex: %s\n", strerror(errno));
+          exit(EXIT_FAILURE);
+      }
+
       pthread_cond_broadcast(&cond);
     }
     //TODO: Write new client to the producer-consumer buffer
@@ -109,8 +169,10 @@ int main(int argc, char* argv[]) {
   for(int i = 0; i<MAX_SESSION_COUNT; i++){
     pthread_join(threads[i], NULL);
   }
-
+  
   close(server_pipe);
   free_queue(queue);
+  free(threads);
+  free(arguments_list);
   ems_terminate();
 }
