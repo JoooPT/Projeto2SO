@@ -1,6 +1,8 @@
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "api.h"
@@ -124,6 +126,18 @@ int main(int argc, char *argv[]) {
       close(in_fd);
       close(out_fd);
       ems_quit();
+      //  Unlink response pipe
+      if (unlink(argv[1]) != 0 && errno != ENOENT) {
+        fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", argv[1],
+                strerror(errno));
+        return (1);
+      }
+      // Unlink request pipe
+      if (unlink(argv[2]) != 0 && errno != ENOENT) {
+        fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", argv[2],
+                strerror(errno));
+        return (1);
+      }
       return 0;
     }
   }
