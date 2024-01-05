@@ -3,6 +3,7 @@
         "fcntl.h": "c",
         "pthread.h": "c",
         "signal.h": "c",
-        "cerrno": "c"
+        "cerrno": "c",
+        "util.h": "c"
     }
 }

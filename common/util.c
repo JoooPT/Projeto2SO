@@ -7,18 +7,16 @@
 
 #include "util.h"
 
-int send_msg(int pipe, void *src, size_t bytes) {
+void send_msg(int pipe, void *src, size_t bytes) {
   if (write(pipe, src, bytes) < 0) {
     fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
-    return -1;
+    exit(EXIT_FAILURE);
   }
-  return 0;
 }
 
-int get_msg(int pipe, void *dest, size_t bytes) {
+void get_msg(int pipe, void *dest, size_t bytes) {
   if (read(pipe, dest, bytes) < 0) {
     fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
-    return -1;
+    exit(EXIT_FAILURE);
   }
-  return 0;
 }

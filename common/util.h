@@ -5,12 +5,12 @@
 /// @param pipe
 /// @param src
 /// @param bytes
-int send_msg(int pipe, void *src, size_t bytes);
+void send_msg(int pipe, void *src, size_t bytes);
 
 /// Send read message from a pipe
 /// @param pipe
 /// @param dest
 /// @param bytes
-int get_msg(int pipe, void *dest, size_t bytes);
+void get_msg(int pipe, void *dest, size_t bytes);
 
 #endif // UTIL_H
