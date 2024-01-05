@@ -249,42 +249,37 @@ int ems_list_events(int out_fd) {
   struct ListNode *to = event_list->tail;
   struct ListNode *current = event_list->head;
 
+  // if there are no events
   if (current == NULL) {
-    char buff[] = "No events\n";
-    if (print_str(out_fd, buff)) {
-      perror("Error writing to file descriptor");
-      pthread_rwlock_unlock(&event_list->rwl);
-      send_msg(out_fd, &ret, sizeof(int));
-      return 1;
-    }
-
+    ret = 2;
+    send_msg(out_fd, &ret, sizeof(int));
     pthread_rwlock_unlock(&event_list->rwl);
     return 0;
   }
 
+  // counting number of events
+  size_t num_events = 0;
   while (1) {
-    char buff[] = "Event: ";
-    if (print_str(out_fd, buff)) {
-      perror("Error writing to file descriptor");
-      pthread_rwlock_unlock(&event_list->rwl);
-      return 1;
-    }
-
-    char id[16];
-    sprintf(id, "%u\n", (current->event)->id);
-    if (print_str(out_fd, id)) {
-      perror("Error writing to file descriptor");
-      pthread_rwlock_unlock(&event_list->rwl);
-      return 1;
-    }
-
+    num_events++;
     if (current == to) {
       break;
     }
-
     current = current->next;
   }
-
+  
+  // creating array of events
+  unsigned int *ids = malloc(num_events * sizeof(unsigned int));
+  current = event_list->head;
+  for (size_t i = 0; i < num_events; i++) {
+    ids[i] = (current->event)->id;
+    current = current->next;
+  }
+  
+  // sending data to response pipe
   pthread_rwlock_unlock(&event_list->rwl);
+  ret = 0;
+  send_msg(out_fd, &ret, sizeof(int));
+  send_msg(out_fd, &num_events, sizeof(size_t));
+  send_msg(out_fd, ids, sizeof(unsigned int) * num_events);
   return 0;
 }

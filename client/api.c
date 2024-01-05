@@ -165,7 +165,7 @@ int ems_list_events(int out_fd) {
   send_msg(request_pipe, &code, sizeof(char));
   send_msg(request_pipe, &session_id, sizeof(int));
   get_msg(response_pipe, &exit, sizeof(int));
-  if (exit != 0) {
+  if (exit == 0) {
     size_t num_events;
     get_msg(response_pipe, &num_events, sizeof(size_t));
     unsigned int *ids = malloc(num_events * sizeof(unsigned int));
@@ -176,6 +176,10 @@ int ems_list_events(int out_fd) {
       write(out_fd, event, strlen(event));
     }
     free(ids);
+  }
+  else if (exit == 2) {
+    char no_events[11] = "No Events\n";
+    write(out_fd, no_events, strlen(no_events));
   }
   // TODO: send list request to the server (through the request pipe) and wait
   // for the response (through the response pipe)
