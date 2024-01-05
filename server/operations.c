@@ -4,22 +4,25 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "common/util.h"
 #include "common/io.h"
+#include "common/util.h"
 #include "eventlist.h"
 
-static struct EventList* event_list = NULL;
+static struct EventList *event_list = NULL;
 static unsigned int state_access_delay_us = 0;
 
 /// Gets the event with the given ID from the state.
-/// @note Will wait to simulate a real system accessing a costly memory resource.
+/// @note Will wait to simulate a real system accessing a costly memory
+/// resource.
 /// @param event_id The ID of the event to get.
 /// @param from First node to be searched.
 /// @param to Last node to be searched.
 /// @return Pointer to the event if found, NULL otherwise.
-static struct Event* get_event_with_delay(unsigned int event_id, struct ListNode* from, struct ListNode* to) {
+static struct Event *get_event_with_delay(unsigned int event_id,
+                                          struct ListNode *from,
+                                          struct ListNode *to) {
   struct timespec delay = {0, state_access_delay_us * 1000};
-  nanosleep(&delay, NULL);  // Should not be removed
+  nanosleep(&delay, NULL); // Should not be removed
 
   return get_event(event_list, event_id, from, to);
 }
@@ -30,7 +33,9 @@ static struct Event* get_event_with_delay(unsigned int event_id, struct ListNode
 /// @param row Row of the seat.
 /// @param col Column of the seat.
 /// @return Index of the seat.
-static size_t seat_index(struct Event* event, size_t row, size_t col) { return (row - 1) * event->cols + col - 1; }
+static size_t seat_index(struct Event *event, size_t row, size_t col) {
+  return (row - 1) * event->cols + col - 1;
+}
 
 int ems_init(unsigned int delay_us) {
   if (event_list != NULL) {
@@ -71,13 +76,14 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
     return 1;
   }
 
-  if (get_event_with_delay(event_id, event_list->head, event_list->tail) != NULL) {
+  if (get_event_with_delay(event_id, event_list->head, event_list->tail) !=
+      NULL) {
     fprintf(stderr, "Event already exists\n");
     pthread_rwlock_unlock(&event_list->rwl);
     return 1;
   }
 
-  struct Event* event = malloc(sizeof(struct Event));
+  struct Event *event = malloc(sizeof(struct Event));
 
   if (event == NULL) {
     fprintf(stderr, "Error allocating memory for event\n");
@@ -115,7 +121,8 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
   return 0;
 }
 
-int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys) {
+int ems_reserve(unsigned int event_id, size_t num_seats, size_t *xs,
+                size_t *ys) {
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
     return 1;
@@ -126,7 +133,8 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
     return 1;
   }
 
-  struct Event* event = get_event_with_delay(event_id, event_list->head, event_list->tail);
+  struct Event *event =
+      get_event_with_delay(event_id, event_list->head, event_list->tail);
 
   pthread_rwlock_unlock(&event_list->rwl);
 
@@ -141,7 +149,8 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
   }
 
   for (size_t i = 0; i < num_seats; i++) {
-    if (xs[i] <= 0 || xs[i] > event->rows || ys[i] <= 0 || ys[i] > event->cols) {
+    if (xs[i] <= 0 || xs[i] > event->rows || ys[i] <= 0 ||
+        ys[i] > event->cols) {
       fprintf(stderr, "Seat out of bounds\n");
       pthread_mutex_unlock(&event->mutex);
       return 1;
@@ -188,7 +197,8 @@ int ems_show(int out_fd, unsigned int event_id) {
     return 1;
   }
 
-  struct Event* event = get_event_with_delay(event_id, event_list->head, event_list->tail);
+  struct Event *event =
+      get_event_with_delay(event_id, event_list->head, event_list->tail);
 
   pthread_rwlock_unlock(&event_list->rwl);
 
@@ -206,7 +216,7 @@ int ems_show(int out_fd, unsigned int event_id) {
 
   size_t num_rows = event->rows;
   size_t num_cols = event->cols;
-  unsigned int* seats = malloc(num_rows * num_cols * sizeof(unsigned int));
+  unsigned int *seats = malloc(num_rows * num_cols * sizeof(unsigned int));
   int i = 0;
   for (size_t row = 1; row <= event->rows; row++) {
     for (size_t col = 1; col <= event->cols; col++) {
@@ -236,8 +246,8 @@ int ems_list_events(int out_fd) {
     return 1;
   }
 
-  struct ListNode* to = event_list->tail;
-  struct ListNode* current = event_list->head;
+  struct ListNode *to = event_list->tail;
+  struct ListNode *current = event_list->head;
 
   if (current == NULL) {
     char buff[] = "No events\n";
@@ -247,7 +257,7 @@ int ems_list_events(int out_fd) {
       send_msg(out_fd, &ret, sizeof(int));
       return 1;
     }
-    
+
     pthread_rwlock_unlock(&event_list->rwl);
     return 0;
   }

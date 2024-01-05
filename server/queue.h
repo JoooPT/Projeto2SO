@@ -7,46 +7,45 @@
 #include "common/constants.h"
 
 struct Request {
-    char request_pipe_name[NAME_LEN];
-    char response_pipe_name[NAME_LEN];
-    int session_id;
+  char request_pipe_name[NAME_LEN];
+  char response_pipe_name[NAME_LEN];
+  int session_id;
 };
 
-struct QueueNode{
-    struct Request* request;
-    struct QueueNode* next;
+struct QueueNode {
+  struct Request *request;
+  struct QueueNode *next;
 };
 
-struct Queue{
-    struct QueueNode* head;
-    struct QueueNode* tail;
-    pthread_mutex_t mutex;
+struct Queue {
+  struct QueueNode *head;
+  struct QueueNode *tail;
+  pthread_mutex_t mutex;
 };
 
 /// Creates a new Queue
 /// @return Newly created Queue or NULL on failure
-struct Queue* create_queue();
+struct Queue *create_queue();
 
 /// Creates a new Request
 /// @param request_pipe name to be added to the request
 /// @param response_pipe name to be added to the request
 /// @return Newly created Request or NULL on failure
-struct Request* create_request(char* request_pipe, char* response_pipe);
+struct Request *create_request(char *request_pipe, char *response_pipe);
 
 /// Appends a request to the end of the Queue
 /// @param queue Queue to be modified
 /// @param request Request to be appended
 /// @return 0 if append was sucessful or 1 otherwise
-int append_request(struct Queue* queue, struct Request* request);
-
+int append_request(struct Queue *queue, struct Request *request);
 
 /// Pops the first request from the Queue
 /// @param queue Queue to be modified
 /// @return The head Request fo the Queue or NULL on failure
-struct Request* pop_request(struct Queue* queue);
+struct Request *pop_request(struct Queue *queue);
 
 /// Frees all the Requests form the Queue
 /// @param queue Queue to be modified
-void free_queue(struct Queue* queue);
+void free_queue(struct Queue *queue);
 
 #endif
