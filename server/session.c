@@ -61,7 +61,6 @@ int run_session(struct Request* request, int id) {
             return 0;
         
         case OP_CREATE:
-            printf("I am creating\n");
             size_t num_rows, num_cols;
             get_msg(req_pipe, &event_id, sizeof(unsigned int));
             get_msg(req_pipe, &num_rows, sizeof(size_t));
@@ -122,12 +121,11 @@ void *run_thread(void *args){
 
         // Starts the Session with the new client
         if(new_request != NULL){
+            printf("Thread %u: running pipe: %s\n", arguments->session_id, new_request->request_pipe_name);
             if(run_session(new_request,arguments->session_id) == END_THREAD){
                 break;
             }
         }
-
-        printf("Thread: %u terminated session\n", arguments->session_id);
     }
     
     pthread_exit(NULL);

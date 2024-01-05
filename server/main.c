@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
 
   while (1) {
     //TODO: Read from pipe
-    char code;
+    char code = 0;
     if (read(server_pipe, &code, sizeof(char)) < 0) {
       fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
