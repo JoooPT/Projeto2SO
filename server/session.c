@@ -34,6 +34,7 @@ int run_session(struct Request *request, int id) {
     return 1;
   }
 
+  //send back the session id
   send_msg(resp_pipe, &id, sizeof(int));
 
   char code;

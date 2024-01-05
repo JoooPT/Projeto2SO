@@ -123,15 +123,20 @@ int main(int argc, char *argv[]) {
   while (1) {
     char code;
     ssize_t ret = 0;
-    //If sigusr1 was caught
+    // If sigusr1 was caught
     if (sigusr1_flag > 0) {
-      // List all events and their sits 
+      // List all events and their sits
       ems_show_events();
       sigusr1_flag--;
     }
-    //If sigint was caught
+    // If sigint was caught
     if (sigint_flag > 0) {
       // Close Server
+      if (unlink(fifo_pathname) != 0 && errno != ENOENT) {
+        fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", fifo_pathname,
+                strerror(errno));
+        exit(EXIT_FAILURE);
+      }
 
       close(server_pipe);
       free_queue(queue);
@@ -139,11 +144,11 @@ int main(int argc, char *argv[]) {
       free(arguments_list);
       return ems_terminate();
     }
-    //Read the code only if the pipe is not broken
-    if(server_pipe != -1){
+    // Read the code only if the server_pipe is not broken
+    if (server_pipe != -1) {
       ret = read(server_pipe, &code, sizeof(char));
     }
-    if ( ret < 0) {
+    if (ret < 0) {
       fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
     }
@@ -153,15 +158,14 @@ int main(int argc, char *argv[]) {
       close(server_pipe);
       server_pipe = open(fifo_pathname, O_RDONLY);
       if (server_pipe == -1) {
-        if(errno == EINTR){
+        if (errno == EINTR) {
           continue;
         }
         fprintf(stderr, "[ERR]:Server failed opening server_pipe: %s\n",
                 strerror(errno));
         exit(EXIT_FAILURE);
       }
-    }
-    else if (code == OP_SETUP) {
+    } else if (code == OP_SETUP) {
       char request_pipe_name[NAME_LEN], response_pipe_name[NAME_LEN];
 
       // Locks the queue to create a request

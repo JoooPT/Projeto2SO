@@ -266,7 +266,7 @@ int ems_list_events(int out_fd) {
     }
     current = current->next;
   }
-  
+
   // creating array of events
   unsigned int *ids = malloc(num_events * sizeof(unsigned int));
   current = event_list->head;
@@ -274,7 +274,7 @@ int ems_list_events(int out_fd) {
     ids[i] = (current->event)->id;
     current = current->next;
   }
-  
+
   // sending data to response pipe
   pthread_rwlock_unlock(&event_list->rwl);
   ret = 0;
@@ -295,8 +295,8 @@ int ems_show_events() {
     return 1;
   }
 
-  struct ListNode* to = event_list->tail;
-  struct ListNode* current = event_list->head;
+  struct ListNode *to = event_list->tail;
+  struct ListNode *current = event_list->head;
 
   if (current == NULL) {
     printf("No events\n");
@@ -314,7 +314,8 @@ int ems_show_events() {
 
     for (size_t i = 1; i <= (current->event)->rows; i++) {
       for (size_t j = 1; j <= (current->event)->cols; j++) {
-        printf("%u", (current->event)->data[seat_index((current->event), i, j)]);
+        printf("%u",
+               (current->event)->data[seat_index((current->event), i, j)]);
 
         if (j < (current->event)->cols) {
           printf(" ");
