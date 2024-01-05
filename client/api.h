@@ -13,7 +13,7 @@ int ems_setup(char const *req_pipe_path, char const *resp_pipe_path,
 
 /// Disconnects from an EMS server.
 /// @return 0 in case of success, 1 otherwise.
-int ems_quit(void);
+int ems_quit();
 
 /// Creates a new event with the given id and dimensions.
 /// @param event_id Id of the event to be created.

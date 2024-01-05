@@ -47,19 +47,15 @@ int run_session(struct Request *request, int id) {
     get_msg(req_pipe, &session_id, sizeof(int));
 
     switch (code) {
+    case 0:
+      close(req_pipe);
+      close(resp_pipe);
+      free(request);
+      return 0;
     case OP_QUIT:
-      // Unlink response pipe
-      if (unlink(request->response_pipe_name) != 0 && errno != ENOENT) {
-        fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n",
-                request->response_pipe_name, strerror(errno));
-        return (1);
-      }
-      // Unlink request pipe
-      if (unlink(request->request_pipe_name) != 0 && errno != ENOENT) {
-        fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n",
-                request->request_pipe_name, strerror(errno));
-        return (1);
-      }
+      close(req_pipe);
+      close(resp_pipe);
+      free(request);
       return 0;
 
     case OP_CREATE:
@@ -132,11 +128,10 @@ void *run_thread(void *args) {
     if (new_request != NULL) {
       printf("Thread %u: running pipe: %s\n", arguments->session_id,
              new_request->request_pipe_name);
-      if (run_session(new_request, arguments->session_id) == END_THREAD) {
-        break;
+      if (run_session(new_request, arguments->session_id)) {
+        fprintf(stderr, "[ERR]: Session: %u ended unsucessfuly\n",
+                arguments->session_id);
       }
     }
   }
-
-  pthread_exit(NULL);
 }

@@ -87,12 +87,14 @@ int ems_setup(char const *req_pipe_path, char const *resp_pipe_path,
   return 0;
 }
 
-int ems_quit(void) {
+int ems_quit() {
   // Create and send message
   char code = OP_QUIT;
   send_msg(request_pipe, &code, sizeof(char));
   send_msg(request_pipe, &session_id, sizeof(int));
-  // TODO: close pipes
+
+  // close pipes
+  close(server_pipe);
   close(request_pipe);
   close(response_pipe);
   return 1;

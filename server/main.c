@@ -33,7 +33,7 @@ static void sig_handler(int sig) {
       exit(EXIT_FAILURE);
     }
     sigint_flag++;
-    fprintf(stderr, "Caught SIGUSR1 (%d)\n", sigint_flag);
+    fprintf(stderr, "Caught SIGINT (%d)\n", sigint_flag);
     return; // Resume execution at point of interruption
   }
 }
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  //Intialize server, create worker threads
+  // Intialize server, create worker threads
 
   char *fifo_pathname = argv[1];
 
@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
 
   pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
-  //Create the worker Threads
+  // Create the worker Threads
   for (int i = 0; i < MAX_SESSION_COUNT; i++) {
     arguments_list[i].queue = queue;
     arguments_list[i].cond = &cond;
@@ -121,7 +121,6 @@ int main(int argc, char *argv[]) {
   }
 
   while (1) {
-    // TODO: Read from pipe
     char code;
     if (sigusr1_flag > 0) {
       // list_event(); //TO DO create this function
@@ -129,23 +128,20 @@ int main(int argc, char *argv[]) {
     }
     if (sigint_flag > 0) {
       // Close Server
-      for (int i = 0; i < MAX_SESSION_COUNT; i++) {
-        pthread_join(threads[i], NULL);
-      }
-
       close(server_pipe);
       free_queue(queue);
       free(threads);
       free(arguments_list);
       return ems_terminate();
     }
-    if (read(server_pipe, &code, sizeof(char)) < 0) {
+    ssize_t ret = read(server_pipe, &code, sizeof(char));
+    if ( ret < 0) {
       fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
     }
     // If there is no client to request a session close and open the server pipe
     // to wait for other client
-    if (code == 0) {
+    if (ret == 0) {
       close(server_pipe);
       server_pipe = open(fifo_pathname, O_RDONLY);
       if (server_pipe == -1) {
@@ -153,7 +149,8 @@ int main(int argc, char *argv[]) {
                 strerror(errno));
         exit(EXIT_FAILURE);
       }
-    } else if (code == OP_SETUP) {
+    }
+    else if (code == OP_SETUP) {
       char request_pipe_name[NAME_LEN], response_pipe_name[NAME_LEN];
 
       // Locks the queue to create a request
@@ -170,15 +167,16 @@ int main(int argc, char *argv[]) {
       struct Request *new_request =
           create_request(request_pipe_name, response_pipe_name);
       append_request(queue, new_request);
+
+      // Wake up all threads waiting for a Request
+      pthread_cond_broadcast(&cond);
+
       // Unlocks the Queue
       if (pthread_mutex_unlock(&queue->mutex) != 0) {
         fprintf(stderr, "[ERR]: failed unlocking a mutex: %s\n",
                 strerror(errno));
         exit(EXIT_FAILURE);
       }
-
-      // Wake up all threads waiting for a Request
-      pthread_cond_broadcast(&cond);
     }
   }
 }
